@@ -1,2 +1,2 @@
 # tierlist
-silly terminal tierlist creator
+silly repl terminal tierlist creator
