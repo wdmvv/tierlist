@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 // my thoughts on how this will(should) work:
@@ -20,14 +21,14 @@ import (
 // i guess ill have to find out more about groups
 
 type TierList struct {
-	Tiers  map[string]Tier
+	Tiers  map[string]*Tier
 	input  io.Reader
 	output io.Writer
 	lowest int // lowest tier index
 }
 
 func NewTierlist(i io.Reader, o io.Writer) *TierList {
-	return &TierList{make(map[string]Tier), i, o, 0}
+	return &TierList{make(map[string]*Tier), i, o, 0}
 }
 
 type Tier struct {
@@ -48,32 +49,37 @@ func (t *TierList) REPL() {
 	// show - ^([sS]{1}) - <command> (maybe will add more params later)
 	// quit - ^([qQ]{1}) - <command>
 
-	c, err := regexp.Compile(`^[iI aA rR sS qQ]{1}`)
-	if err != nil {
-		t.LogErr(err)
-	}
-	inp := make([]byte, 1024)
+	cmds := regexp.MustCompile(`^[iIaArRsSqQ]{1}`)
+
 	for {
-		_, err = t.input.Read(inp)
+		cmdinput := make([]byte, 1024)
+
+		_, err := t.input.Read(cmdinput)
 		if err != nil {
-			t.LogErr(err)
+			if err != io.EOF {
+				t.LogErr(err)
+			}
 			continue
 		}
-		res := c.Find(inp)
+		res := cmds.Find(cmdinput)
 		if res == nil {
 			continue
 		}
 
 		// the horrors of processing commands (sorry!)
-
+		//
 		switch string(res) {
 		case "i", "I", "a", "A", "r", "R":
-			_, err = t.input.Read(inp)
+			argsinp := make([]byte, 1024)
+			_, err = t.input.Read(argsinp)
 			if err != nil {
-				t.LogErr(err)
+				if err != io.EOF {
+					t.LogErr(err)
+				}
 				continue
 			}
-			line := string(inp)
+
+			line := string(argsinp)
 			match := iarRegex.FindStringSubmatch(line)
 			indname := iarRegex.SubexpIndex("name")
 			indp := iarRegex.SubexpIndex("priority")
@@ -127,7 +133,7 @@ func (t *TierList) InsertTier(name string, priority int) {
 			return
 		}
 	}
-	t.Tiers[name] = Tier{priority, name, make([]string, 0)}
+	t.Tiers[name] = &Tier{priority, name, make([]string, 0)}
 }
 
 // add item to a tier
@@ -158,21 +164,63 @@ func (t *TierList) Remove(name string, priority int) {
 
 // display
 func (t *TierList) Show() {
-	ts := make([]Tier, len(t.Tiers))
+	tiers := make([]Tier, 0, len(t.Tiers))
 
 	for _, i := range t.Tiers {
-		ts = append(ts, i)
+		tiers = append(tiers, *i)
 	}
-	sortTiers(ts)
+	sortTiers(tiers)
 
-	for _, i := range ts {
-		fmt.Println(i.Name, i.Items)
+	var (
+		lngname int
+		lngitem int
+	)
+
+	for _, i := range tiers {
+		if len(i.Name) > lngname {
+			lngname = len(i.Name)
+		}
+		for _, j := range i.Items {
+			if len(j) > lngitem {
+				lngitem = len(j)
+			}
+		}
 	}
 
+	// i wonder if there is a better way
+	// maybe i should show it as i create it,
+	// maybe i should display on row basis
+	// who knows what is the best way
+	var out string
+	for _, i := range tiers {
+		// 3 is for columns, lngname and lngitem for add. width
+		out += strings.Repeat("-", 3+lngname+lngitem) + "\n"
+		in := len(i.Items) / 2
+
+		// this defines row iteration
+		for j, k := range i.Items {
+			if j == in {
+				// centering: (lngname - len) / 2 and then leftovers
+				// maybe align option in unforseen future?
+				left := (lngname - len(i.Name)) / 2
+				right := lngname - left
+				out += strings.Repeat(" ", left) + i.Name + strings.Repeat(" ", right)
+			} else {
+				out += strings.Repeat(" ", lngname)
+			}
+			out = "|" + out + "|"
+
+			left := (lngitem - len(k)) / 2
+			right := lngitem - left
+			out += strings.Repeat(" ", left) + k + strings.Repeat(" ", right) + "|\n"
+		}
+	}
+	out += strings.Repeat("-", 3+lngname+lngitem) + "\n"
+	fmt.Print(out)
 }
 
 func sortTiers(ts []Tier) {
 	sort.SliceStable(ts, func(i, j int) bool {
-		return ts[i].Priority > ts[j].Priority
+		return ts[i].Priority < ts[j].Priority
 	})
 }

@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-
 	t := NewTierlist(os.Stdin, os.Stdout)
 	t.REPL()
 }

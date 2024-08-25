@@ -23,3 +23,6 @@ go.work.sum
 
 # ignoring built binary
 tierlist
+
+# ignoring my io tests
+input.txt
