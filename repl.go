@@ -19,8 +19,8 @@ import (
 
 type TierList struct {
 	Tiers  map[string]Tier
-	Input  io.Reader
-	Output io.Writer
+	input  io.Reader
+	output io.Writer
 	lowest int // lowest tier index
 }
 
@@ -46,14 +46,13 @@ func (t *TierList) REPL() {
 	// show - ^([sS]{1}) - <command> (maybe will add more params later)
 	// quit - ^([qQ]{1}) - <command>
 
-	c, err := regexp.Compile(`^[iIaArRsSqQ]{1}`)
+	c, err := regexp.Compile(`^[iI aA rR sS qQ]{1}`)
 	if err != nil {
 		t.Log(err)
 	}
-
 	inp := make([]byte, 1024)
 	for {
-		_, err = t.Input.Read(inp)
+		_, err = t.input.Read(inp)
 		if err != nil {
 			t.Log(err)
 			continue
@@ -64,19 +63,23 @@ func (t *TierList) REPL() {
 		}
 
 		// the horrors of processing commands (sorry!)
-		//
-		_, err = t.Input.Read(inp)
-		if err != nil {
-			t.Log(err)
-			continue
-		}
 
 		switch string(res) {
 		case "i", "I", "a", "A", "r", "R":
+			_, err = t.input.Read(inp)
+			if err != nil {
+				t.Log(err)
+				continue
+			}
 			line := string(inp)
 			match := iarRegex.FindStringSubmatch(line)
-			name := match[iarRegex.SubexpIndex("name")]
-			p := match[iarRegex.SubexpIndex("priority")]
+			indname := iarRegex.SubexpIndex("name")
+			indp := iarRegex.SubexpIndex("priority")
+			if indname >= len(match) || indp >= len(match) || indname == -1 || indp == -1 {
+				continue
+			}
+			name := match[indname]
+			p := match[indp]
 			pint, err := strconv.Atoi(p)
 			if err != nil {
 				t.Log(err)
@@ -90,18 +93,16 @@ func (t *TierList) REPL() {
 			case "r", "R":
 				t.Add(name, pint)
 			}
-
 		case "s", "S":
 			t.Show()
 		case "q":
 			break
 		}
-
 	}
 }
 
 func (t *TierList) Log(e error) {
-	t.Output.Write([]byte(e.Error()))
+	t.output.Write([]byte(e.Error()))
 }
 
 // insert new tier, 0 is the highest, N is the lowest
