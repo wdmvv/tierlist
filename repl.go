@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -48,13 +50,13 @@ func (t *TierList) REPL() {
 
 	c, err := regexp.Compile(`^[iI aA rR sS qQ]{1}`)
 	if err != nil {
-		t.Log(err)
+		t.LogErr(err)
 	}
 	inp := make([]byte, 1024)
 	for {
 		_, err = t.input.Read(inp)
 		if err != nil {
-			t.Log(err)
+			t.LogErr(err)
 			continue
 		}
 		res := c.Find(inp)
@@ -68,7 +70,7 @@ func (t *TierList) REPL() {
 		case "i", "I", "a", "A", "r", "R":
 			_, err = t.input.Read(inp)
 			if err != nil {
-				t.Log(err)
+				t.LogErr(err)
 				continue
 			}
 			line := string(inp)
@@ -82,7 +84,7 @@ func (t *TierList) REPL() {
 			p := match[indp]
 			pint, err := strconv.Atoi(p)
 			if err != nil {
-				t.Log(err)
+				t.LogErr(err)
 				continue
 			}
 			switch string(res) {
@@ -91,36 +93,86 @@ func (t *TierList) REPL() {
 			case "a", "A":
 				t.Add(name, pint)
 			case "r", "R":
-				t.Add(name, pint)
+				t.Remove(name, pint)
 			}
 		case "s", "S":
 			t.Show()
-		case "q":
+		case "q", "Q":
 			break
 		}
 	}
 }
 
-func (t *TierList) Log(e error) {
+func (t *TierList) LogErr(e error) {
 	t.output.Write([]byte(e.Error()))
 }
 
+// imagine generics here... ↑↓
+
+func (t *TierList) LogStr(s string) {
+	t.output.Write([]byte(s))
+}
+
 // insert new tier, 0 is the highest, N is the lowest
+// if priority exists then it updates the name
+// if name exists then it ignores (should add swap function maybe)
 func (t *TierList) InsertTier(name string, priority int) {
-	print("imagine i inserted "+name+" into ", priority, "\n")
+	if _, ok := t.Tiers[name]; ok {
+		t.LogStr(name + " tier does not exist!")
+		return
+	}
+	for _, i := range t.Tiers {
+		if i.Priority == priority {
+			i.Name = name
+			return
+		}
+	}
+	t.Tiers[name] = Tier{priority, name, make([]string, 0)}
 }
 
 // add item to a tier
 func (t *TierList) Add(name string, priority int) {
-	print("imagine i added "+name+" to ", priority, "\n")
+	for _, i := range t.Tiers {
+		if i.Priority == priority {
+			i.Items = append(i.Items, name)
+			return
+		}
+	}
+	t.LogStr("no such priority found")
 }
 
 // remove item from a tier
 func (t *TierList) Remove(name string, priority int) {
-	print("imagine i removed "+name+" from ", priority, "\n")
+	for _, i := range t.Tiers {
+		if i.Priority == priority {
+			for j, k := range i.Items {
+				if k == name {
+					i.Items = append(i.Items[:j], i.Items[j+1:]...)
+					return
+				}
+			}
+		}
+	}
+	t.LogStr("no item or priority found")
 }
 
 // display
 func (t *TierList) Show() {
-	print("imagine i showed\n")
+	ts := make([]Tier, len(t.Tiers))
+
+	for _, i := range t.Tiers {
+		ts = append(ts, i)
+	}
+	sortTiers(ts)
+
+	for _, i := range ts {
+		fmt.Println(i.Name, i.Items)
+	}
+
+}
+
+func sortTiers(ts []Tier) {
+	sort.SliceStable(ts, func(i, j int) bool {
+		return ts[i].Priority > ts[j].Priority
+	})
 }
