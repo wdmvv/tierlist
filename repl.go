@@ -194,7 +194,7 @@ func (t *TierList) Show() {
 	for _, t := range tiers {
 		out += (strings.Repeat("-", lngname+lngitem+3) + "\n")
 		if len(t.Items) == 0 {
-			l, r := center(t.Name, lngname)
+			l, r := centre(t.Name, lngname)
 			// tier cell
 			out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
 			// items cell
@@ -208,10 +208,10 @@ func (t *TierList) Show() {
 			if i != namec {
 				out += "|" + strings.Repeat(" ", lngname) + "|"
 			} else {
-				l, r := center(t.Name, lngname)
+				l, r := centre(t.Name, lngname)
 				out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
 			}
-			l, r := center(j, lngitem)
+			l, r := centre(j, lngitem)
 			out += (strings.Repeat(" ", l) + j + strings.Repeat(" ", r) + "|\n")
 		}
 	}
@@ -219,9 +219,9 @@ func (t *TierList) Show() {
 	t.output.Write([]byte(out))
 }
 
-// center text based on the box size
+// centre text based on the box size
 // smth is the string to be centered, lng is the max width
-func center(smth string, lng int) (int, int) {
+func centre(smth string, lng int) (int, int) {
 	var left, right int
 	if len(smth) == lng {
 		return 0, 0
