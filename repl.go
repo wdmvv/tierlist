@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"regexp"
 	"sort"
@@ -104,7 +103,7 @@ func (t *TierList) REPL() {
 		case "s", "S":
 			t.Show()
 		case "q", "Q":
-			break
+			return
 		}
 	}
 }
@@ -112,8 +111,6 @@ func (t *TierList) REPL() {
 func (t *TierList) LogErr(e error) {
 	t.output.Write([]byte(e.Error()))
 }
-
-// imagine generics here... ↑↓
 
 func (t *TierList) LogStr(s string) {
 	t.output.Write([]byte(s))
@@ -181,6 +178,7 @@ func (t *TierList) Show() {
 			lngname = len(i.Name)
 		}
 		for _, j := range i.Items {
+
 			if len(j) > lngitem {
 				lngitem = len(j)
 			}
@@ -190,33 +188,50 @@ func (t *TierList) Show() {
 	// i wonder if there is a better way
 	// maybe i should show it as i create it,
 	// maybe i should display on row basis
+	// maybe buffering of sorts?
 	// who knows what is the best way
 	var out string
-	for _, i := range tiers {
-		// 3 is for columns, lngname and lngitem for add. width
-		out += strings.Repeat("-", 3+lngname+lngitem) + "\n"
-		in := len(i.Items) / 2
+	for _, t := range tiers {
+		out += (strings.Repeat("-", lngname+lngitem+3) + "\n")
+		if len(t.Items) == 0 {
+			l, r := center(t.Name, lngname)
+			// tier cell
+			out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
+			// items cell
+			out += (strings.Repeat(" ", lngitem) + "|\n")
+			continue
+		}
+		// what row should we center name on/in, top > bottom
+		namec := len(t.Items) / 2
 
-		// this defines row iteration
-		for j, k := range i.Items {
-			if j == in {
-				// centering: (lngname - len) / 2 and then leftovers
-				// maybe align option in unforseen future?
-				left := (lngname - len(i.Name)) / 2
-				right := lngname - left
-				out += strings.Repeat(" ", left) + i.Name + strings.Repeat(" ", right)
+		for i, j := range t.Items {
+			if i != namec {
+				out += "|" + strings.Repeat(" ", lngname) + "|"
 			} else {
-				out += strings.Repeat(" ", lngname)
+				l, r := center(t.Name, lngname)
+				out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
 			}
-			out = "|" + out + "|"
-
-			left := (lngitem - len(k)) / 2
-			right := lngitem - left
-			out += strings.Repeat(" ", left) + k + strings.Repeat(" ", right) + "|\n"
+			l, r := center(j, lngitem)
+			out += (strings.Repeat(" ", l) + j + strings.Repeat(" ", r) + "|\n")
 		}
 	}
-	out += strings.Repeat("-", 3+lngname+lngitem) + "\n"
-	fmt.Print(out)
+	out += (strings.Repeat("-", lngname+lngitem+3) + "\n")
+	t.output.Write([]byte(out))
+}
+
+// center text based on the box size
+// smth is the string to be centered, lng is the max width
+func center(smth string, lng int) (int, int) {
+	var left, right int
+	if len(smth) == lng {
+		return 0, 0
+	}
+	// all avlb. distance by 2
+	left = (lng - len(smth)) / 2
+	// leftovers (or rightovers ^^ )
+	// _presumably_ this is bigger that 0
+	right = lng - len(smth) - left
+	return left, right
 }
 
 func sortTiers(ts []Tier) {
