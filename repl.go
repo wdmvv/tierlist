@@ -192,30 +192,37 @@ func (t *TierList) Show() {
 	// who knows what is the best way
 	var out string
 	for _, t := range tiers {
-		out += (strings.Repeat("-", lngname+lngitem+3) + "\n")
+		out += (strings.Repeat("-", lngname+lngitem+3+
+			*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
 		if len(t.Items) == 0 {
 			l, r := centre(t.Name, lngname)
 			// tier cell
-			out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
+			out += ("|" + strings.Repeat(" ", l+*Settings.MarginTier) + t.Name +
+				strings.Repeat(" ", r+*Settings.MarginTier) + "|")
 			// items cell
-			out += (strings.Repeat(" ", lngitem) + "|\n")
+			out += (strings.Repeat(" ", lngitem+*Settings.MarginItems*2) + "|" + "\n")
 			continue
 		}
 		// what row should we center name on/in, top > bottom
 		namec := len(t.Items) / 2
 
 		for i, j := range t.Items {
+			// tier cell
 			if i != namec {
-				out += "|" + strings.Repeat(" ", lngname) + "|"
+				out += "|" + strings.Repeat(" ", lngname+2**Settings.MarginTier) + "|"
 			} else {
 				l, r := centre(t.Name, lngname)
-				out += ("|" + strings.Repeat(" ", l) + t.Name + strings.Repeat(" ", r) + "|")
+				out += ("|" + strings.Repeat(" ", l+*Settings.MarginTier) + t.Name +
+					strings.Repeat(" ", r+*Settings.MarginTier) + "|")
 			}
+			// items cell
 			l, r := centre(j, lngitem)
-			out += (strings.Repeat(" ", l) + j + strings.Repeat(" ", r) + "|\n")
+			out += (strings.Repeat(" ", l+*Settings.MarginItems) + j +
+				strings.Repeat(" ", r+*Settings.MarginItems) + "|\n")
 		}
 	}
-	out += (strings.Repeat("-", lngname+lngitem+3) + "\n")
+	out += (strings.Repeat("-", lngname+lngitem+3+
+		*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
 	t.output.Write([]byte(out))
 }
 
