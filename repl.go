@@ -190,10 +190,12 @@ func (t *TierList) Show() {
 	// maybe i should display on row basis
 	// maybe buffering of sorts?
 	// who knows what is the best way
+
 	var out string
 	for _, t := range tiers {
 		out += (strings.Repeat("-", lngname+lngitem+3+
-			*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
+			*Settings.MarginTier*2+*Settings.MarginItems*2) + "\n")
+
 		if len(t.Items) == 0 {
 			l, r := centre(t.Name, lngname)
 			// tier cell
@@ -203,7 +205,7 @@ func (t *TierList) Show() {
 			out += (strings.Repeat(" ", lngitem+*Settings.MarginItems*2) + "|" + "\n")
 			continue
 		}
-		// what row should we center name on/in, top > bottom
+		// what row should we center tier name on/in, top position is prioritized
 		namec := len(t.Items) / 2
 
 		for i, j := range t.Items {
@@ -217,12 +219,25 @@ func (t *TierList) Show() {
 			}
 			// items cell
 			l, r := centre(j, lngitem)
-			out += (strings.Repeat(" ", l+*Settings.MarginItems) + j +
-				strings.Repeat(" ", r+*Settings.MarginItems) + "|\n")
+
+			// l/c/r alignment
+			switch *Settings.Align {
+			// centre
+			case 0:
+				out += (strings.Repeat(" ", l+*Settings.MarginItems) + j +
+					strings.Repeat(" ", r+*Settings.MarginItems) + "|\n")
+			// left
+			case 1:
+				out += (j + strings.Repeat(" ", l+r+*Settings.MarginItems*2) + "|\n")
+			case 2:
+				out += (strings.Repeat(" ", l+r+*Settings.MarginItems*2) + j + "|\n")
+			}
 		}
 	}
+	// closing border
 	out += (strings.Repeat("-", lngname+lngitem+3+
 		*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
+
 	t.output.Write([]byte(out))
 }
 
