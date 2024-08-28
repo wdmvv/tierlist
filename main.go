@@ -7,5 +7,10 @@ import (
 func main() {
 	ArgsParse()
 	t := NewTierlist(os.Stdin, os.Stdout)
-	t.REPL()
+	if *Settings.Advanced {
+		t.REPLAdvanced()
+	} else {
+		t.REPLBasic()
+	}
+
 }
