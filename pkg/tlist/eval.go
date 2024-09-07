@@ -1,6 +1,7 @@
 package tlist
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"tierlist/cmd"
@@ -155,7 +156,25 @@ func (t *TierList) Show() {
 }
 
 // TODO: generates preset
-func (t *TierList) GenPreset(n int) {
+func (t *TierList) GenPreset(n int) error {
+	if n == 0 {
+		return nil
+	}
+	var ts []string
+	switch n {
+	case 1:
+		ts = []string{"s", "a", "b", "c", "d"}
+	case 2:
+		ts = []string{"s", "a", "b", "c", "d", "e", "f"}
+	case 3:
+		ts = []string{"sss", "ss", "s", "a", "b", "c", "d", "e", "f"}
+	default:
+		return fmt.Errorf("unknown preset %d, ignoring...", n)
+	}
+	for i, j := range ts {
+		t.InsertTier(j, i)
+	}
+	return nil
 }
 
 // centre text based on the box size

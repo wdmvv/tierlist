@@ -10,7 +10,7 @@ Same as mc but for tiers, i.e `|tiername|` -> `|<spaces>tiername<spaces>|`
 Alignment mode, 0 by default - centre, 1 - left, 2 - right<br>
 Note that if you couple this with mc/mt it will add spaces on the opposite side instead of left and right
 ### -d
-Advanced mode, instead of typing, for example
+Advanced mode for faster inputs, instead of typing, for example
 ```
 i
 s 0
@@ -64,13 +64,13 @@ i
 <tier name> <tier priority, lower is better>
 ```
 ### a
-Add item to the tier
+Add item to the tier. If priority already exists, then it renames tier with that priority.
 ```
 a
 <what to add> <tier priority>
 ```
 ### rt
-Removes tier by either name or priority
+Removes tier by either name or priority. Note that priorities do not shift after deleting higher tier.
 ```
 rt
 <tier name> <tier priority>
@@ -87,8 +87,3 @@ ri
 Shows tierlist table
 ### q
 Quits.
-
-# TODO
-<ul>
-<li>default tiers</li>
-</ul>
