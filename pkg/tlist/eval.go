@@ -1,8 +1,9 @@
-package main
+package tlist
 
 import (
 	"sort"
 	"strings"
+	"tierlist/cmd"
 )
 
 func (t *TierList) LogErr(e error) {
@@ -106,15 +107,15 @@ func (t *TierList) Show() {
 	var out string
 	for _, t := range tiers {
 		out += (strings.Repeat("-", lngname+lngitem+3+
-			*Settings.MarginTier*2+*Settings.MarginItems*2) + "\n")
+			*cmd.Settings.MarginTier*2+*cmd.Settings.MarginItems*2) + "\n")
 
 		if len(t.Items) == 0 {
 			l, r := centre(t.Name, lngname)
 			// tier cell
-			out += ("|" + strings.Repeat(" ", l+*Settings.MarginTier) + t.Name +
-				strings.Repeat(" ", r+*Settings.MarginTier) + "|")
+			out += ("|" + strings.Repeat(" ", l+*cmd.Settings.MarginTier) + t.Name +
+				strings.Repeat(" ", r+*cmd.Settings.MarginTier) + "|")
 			// items cell
-			out += (strings.Repeat(" ", lngitem+*Settings.MarginItems*2) + "|" + "\n")
+			out += (strings.Repeat(" ", lngitem+*cmd.Settings.MarginItems*2) + "|" + "\n")
 			continue
 		}
 		// what row should we center tier name on/in, top position is prioritized
@@ -123,32 +124,32 @@ func (t *TierList) Show() {
 		for i, j := range t.Items {
 			// tier cell
 			if i != namec {
-				out += "|" + strings.Repeat(" ", lngname+2**Settings.MarginTier) + "|"
+				out += "|" + strings.Repeat(" ", lngname+2**cmd.Settings.MarginTier) + "|"
 			} else {
 				l, r := centre(t.Name, lngname)
-				out += ("|" + strings.Repeat(" ", l+*Settings.MarginTier) + t.Name +
-					strings.Repeat(" ", r+*Settings.MarginTier) + "|")
+				out += ("|" + strings.Repeat(" ", l+*cmd.Settings.MarginTier) + t.Name +
+					strings.Repeat(" ", r+*cmd.Settings.MarginTier) + "|")
 			}
 			// items cell
 			l, r := centre(j, lngitem)
 
-			// l/c/r alignment
-			switch *Settings.Align {
+			// left/centre/right alignment
+			switch *cmd.Settings.Align {
 			// centre
 			case 0:
-				out += (strings.Repeat(" ", l+*Settings.MarginItems) + j +
-					strings.Repeat(" ", r+*Settings.MarginItems) + "|\n")
+				out += (strings.Repeat(" ", l+*cmd.Settings.MarginItems) + j +
+					strings.Repeat(" ", r+*cmd.Settings.MarginItems) + "|\n")
 			// left
 			case 1:
-				out += (j + strings.Repeat(" ", l+r+*Settings.MarginItems*2) + "|\n")
+				out += (j + strings.Repeat(" ", l+r+*cmd.Settings.MarginItems*2) + "|\n")
 			case 2:
-				out += (strings.Repeat(" ", l+r+*Settings.MarginItems*2) + j + "|\n")
+				out += (strings.Repeat(" ", l+r+*cmd.Settings.MarginItems*2) + j + "|\n")
 			}
 		}
 	}
 	// closing border
 	out += (strings.Repeat("-", lngname+lngitem+3+
-		*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
+		*cmd.Settings.MarginItems*2+*cmd.Settings.MarginTier*2) + "\n")
 
 	t.output.Write([]byte(out))
 }

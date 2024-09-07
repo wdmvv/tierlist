@@ -2,15 +2,18 @@ package main
 
 import (
 	"os"
+	"tierlist/cmd"
+	"tierlist/pkg/tlist"
 )
 
 func main() {
-	ArgsParse()
-	t := NewTierlist(os.Stdin, os.Stdout)
+
+	cmd.ArgsParse()
+	t := tlist.NewTierlist(os.Stdin, os.Stdout)
 	// if *Settings.Preset != 0{
 	// 	will add in the future 'updates'
 	// }
-	if *Settings.Advanced {
+	if *cmd.Settings.Advanced {
 		t.REPLAdvanced()
 	} else {
 		t.REPLBasic()

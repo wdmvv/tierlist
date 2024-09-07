@@ -1,16 +1,33 @@
 # tierlist
-silly repl terminal tierlist creator<br>
-i honestly could not be bothered with creating a module of it because this thing is too small and ever so insignificant<br<br>
-Current commands:<br>
-<ul>
-<li>a - add item to the tier</li>
-<li>i - insert tier</li>
-<li>ri - remove item from tier</li>
-<li>rt - remove tier</li>
-<li>s - show tier</li>
-
-</ul>
-Presets:<br>
+silly repl terminal tierlist creator I created out of boredom (and i did not like online one /shrug)<br>
+# Guide on how to use this thing
+## Cmd options:
+### -mc
+Number of spaces you want to add on each side of the longest item in the table,<br> i.e if it was `|item|`, then now it is `|<spaces>item<spaces>|`
+### -mt
+Same as mc but for tiers, i.e `|tiername|` -> `|<spaces>tiername<spaces>|`
+### -a
+Alignment mode, 0 by default - centre, 1 - left, 2 - right<br>
+Note that if you couple this with mc/mt it will add spaces on the opposite side instead of left and right
+### -d
+Advanced mode, instead of typing, for example
+```
+i
+s 0
+i
+a 1
+```
+you'd be typing
+```
+i
+s 0
+a 1
+...
+q
+```
+this works with every command that needs additional user input
+### -p
+Tiers presets, does not work right now, will add later; presets (ignore for now):<br>
 <table>
     <tr>
         <th>Number</th>
@@ -39,8 +56,39 @@ Presets:<br>
     </tr>
 </table>
 
-TODO:<br>
+## IO loop aka what can you type and what does that do:
+### i
+Insert tier
+```
+i
+<tier name> <tier priority, lower is better>
+```
+### a
+Add item to the tier
+```
+a
+<what to add> <tier priority>
+```
+### rt
+Removes tier by either name or priority
+```
+rt
+<tier name> <tier priority>
+```
+
+### ri
+Removes item from tier if it finds it
+```
+ri
+<item name> <priority>
+```
+
+### s
+Shows tierlist table
+### q
+Quits.
+
+# TODO
 <ul>
-<li>add tier removal</li>
 <li>default tiers</li>
 </ul>

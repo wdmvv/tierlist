@@ -1,4 +1,4 @@
-package main
+package tlist
 
 import (
 	"fmt"
@@ -7,17 +7,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-// my thoughts on how this will(should) work:
-// you can either give own tiers or use default i.e D-S (or smth)
-// additionally you can insert own tier as well but you have to specify position where 0 is the highest N is the lowest
-// TierList is using string:tier for somewhat? faster lookup (although size is small so one could assume list is o(1) too)
-// so it is for more convenient lookup i guess (i would've went with list where index is a priority)
-// will just stick with this for now, might change later
-//
-// somehow regex should support either tier height or tier name, i really should think about this
-// and i should normalize capitals i.e S s are the same, so maybe .lower() check?
-// i guess ill have to find out more about groups
 
 type TierList struct {
 	Tiers  map[string]*Tier
