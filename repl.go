@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -36,22 +37,15 @@ type Tier struct {
 }
 
 var (
-	iarRegex *regexp.Regexp = regexp.MustCompile(`(?P<name>[\w\s]+)\s(?P<priority>[0-9]+)`)
+	iarRegex  *regexp.Regexp = regexp.MustCompile(`(?P<name>[\w\s]+)\s(?P<priority>[0-9]+)`)
+	cmdsInput *regexp.Regexp = regexp.MustCompile(`(^[iIaArR]{1}$)|(^(?i)((ri)|(rt))(?-i)$)`)
+	cmdsOther *regexp.Regexp = regexp.MustCompile(`^[sSqQ]{1}$`)
 )
 
 // basic repl mode that processes one command at a time
 func (t *TierList) REPLBasic() {
-	// ill leave this as priorities and not tier names because i cant come up with a good idea of how to manage this in single line input (so its 2 now)
-	// insert - ^([iI]{1})\s(?P<item>[\w\s]+)\s(?P<priority>[0-9]+) - <command> <tier_name> <int priority>
-	// add - ^([aA]{1})\s(?P<item>[\w\s]+)\s(?P<priority>[0-9]+) - <command> <item> <int priority>
-	// remove - ^([rR]{1})\s(?P<item>[\w\s]+)\s(?P<priority>[0-9]+) - <command> <item> <int priority>
-	// show - ^([sS]{1}) - <command> (maybe will add more params later)
-	// quit - ^([qQ]{1}) - <command>
-
-	cmds := regexp.MustCompile(`^[iIaArRsSqQ]{1}`)
-
 	for {
-		cmdinput := make([]byte, 1024)
+		cmdinput := make([]byte, 4)
 
 		_, err := t.input.Read(cmdinput)
 		if err != nil {
@@ -60,15 +54,22 @@ func (t *TierList) REPLBasic() {
 			}
 			continue
 		}
-		res := cmds.Find(cmdinput)
-		if res == nil {
-			continue
+		// trimming \n's and detecting last letter so it does actually match
+		ls := 0
+		for i, j := range cmdinput {
+			if j == 10 {
+				cmdinput[i] = 0
+			}
+			if j != 0 {
+				ls = i
+			}
 		}
+		cmdinput = cmdinput[:ls]
 
-		// the horrors of processing commands (sorry!)
-		//
-		switch string(res) {
-		case "i", "I", "a", "A", "r", "R":
+		// the horrors of processing commands (such is nature of loops :pensive:)
+		if cmdsInput.Match(cmdinput) {
+			res := strings.ToLower(string(cmdsInput.Find(cmdinput)))
+
 			argsinp := make([]byte, 1024)
 			_, err = t.input.Read(argsinp)
 			if err != nil {
@@ -85,36 +86,36 @@ func (t *TierList) REPLBasic() {
 			if indname >= len(match) || indp >= len(match) || indname == -1 || indp == -1 {
 				continue
 			}
-			name := match[indname]
+			name := strings.Trim(match[indname], " \n")
 			p := match[indp]
 			pint, err := strconv.Atoi(p)
 			if err != nil {
 				t.LogErr(err)
 				continue
 			}
-			switch string(res) {
-			case "i", "I":
-				t.InsertTier(name, pint)
-			case "a", "A":
-				t.Add(name, pint)
-			case "r", "R":
-				t.Remove(name, pint)
+
+			switchCmd(t, res, name, pint)
+		} else if cmdsOther.Match(cmdinput) {
+			res := string(cmdsOther.Find(cmdinput))
+			res = strings.ToLower(res)
+			switch res {
+			case "s":
+				t.Show()
+			case "q":
+				return
 			}
-		case "s", "S":
-			t.Show()
-		case "q", "Q":
-			return
+		} else {
+			fmt.Printf("failed to match command %s, try again\n", string(cmdinput))
 		}
 	}
 }
 
 // advanced mode with loops inside of loop for faster inputs
 func (t *TierList) REPLAdvanced() {
-	cmds := regexp.MustCompile(`^[iIaArRsSqQ]{1}`)
-
 	// main repl loop
 	for {
-		cmdinput := make([]byte, 1024)
+		// cuz right now it will never exceed 4 (even 2, but still)
+		cmdinput := make([]byte, 4)
 
 		_, err := t.input.Read(cmdinput)
 		if err != nil {
@@ -123,28 +124,43 @@ func (t *TierList) REPLAdvanced() {
 			}
 			continue
 		}
-		res := cmds.Find(cmdinput)
-		if res == nil {
-			continue
-		}
 
-		switch string(res) {
-		case "i", "I", "a", "A", "r", "R":
-			// subloop for these commands
+		ls := 0
+		for i, j := range cmdinput {
+			if j == 10 {
+				cmdinput[i] = 0
+			}
+			if j != 0 {
+				ls = i
+			}
+		}
+		cmdinput = cmdinput[:ls]
+
+		if cmdsInput.Match(cmdinput) {
+			res := strings.ToLower(string(cmdsInput.Find(cmdinput)))
+			// advanced subloop
 			for {
 				argsinp := make([]byte, 1024)
-				_, err = t.input.Read(argsinp)
+				_, err := t.input.Read(argsinp)
 				if err != nil {
 					if err != io.EOF {
 						t.LogErr(err)
 					}
 					continue
 				}
-
+				// trimming input
+				ls := 0
+				for i, j := range argsinp {
+					if j != 0 {
+						ls = i
+					}
+				}
+				argsinp = argsinp[:ls]
+				// breaking if input is q
+				// i really should not check it like this but h
 				argsstr := strings.TrimSpace(string(argsinp))
 
-				// i tried to do this with regex and failed, thus this stupid workaround
-				if argsstr[0] == 113 || argsstr[0] == 81 {
+				if (argsinp[0] == 113 || argsinp[0] == 81) && len(argsstr) < 2 {
 					break
 				}
 
@@ -152,9 +168,11 @@ func (t *TierList) REPLAdvanced() {
 				match := iarRegex.FindStringSubmatch(line)
 				indname := iarRegex.SubexpIndex("name")
 				indp := iarRegex.SubexpIndex("priority")
+
 				if indname >= len(match) || indp >= len(match) || indname == -1 || indp == -1 {
 					continue
 				}
+
 				name := match[indname]
 				p := match[indp]
 				pint, err := strconv.Atoi(p)
@@ -162,19 +180,33 @@ func (t *TierList) REPLAdvanced() {
 					t.LogErr(err)
 					continue
 				}
-				switch string(res) {
-				case "i", "I":
-					t.InsertTier(name, pint)
-				case "a", "A":
-					t.Add(name, pint)
-				case "r", "R":
-					t.Remove(name, pint)
-				}
+				switchCmd(t, res, name, pint)
 			}
-		case "s", "S":
-			t.Show()
-		case "q", "Q":
-			return
+		} else if cmdsOther.Match(cmdinput) {
+			res := string(cmdsOther.Find(cmdinput))
+			res = strings.ToLower(res)
+			switch res {
+			case "s":
+				t.Show()
+			case "q":
+				return
+			}
+		} else {
+			fmt.Printf("failed to match command %s, try again\n", string(cmdinput))
 		}
+	}
+}
+
+// small func to not repeat same switch twice (plus ill have to edit only once in the future)
+func switchCmd(t *TierList, cmd string, name string, priority int) {
+	switch cmd {
+	case "i":
+		t.InsertTier(name, priority)
+	case "a":
+		t.Add(name, priority)
+	case "ri":
+		t.RemoveItem(name, priority)
+	case "rt":
+		t.RemoveTier(name, priority)
 	}
 }

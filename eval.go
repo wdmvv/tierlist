@@ -16,6 +16,7 @@ func (t *TierList) LogStr(s string) {
 // insert new tier, 0 is the highest, N is the lowest
 // if priority exists then it updates the name
 // if name exists then it ignores (should add swap function maybe)
+// input: i
 func (t *TierList) InsertTier(name string, priority int) {
 	if _, ok := t.Tiers[name]; ok {
 		t.LogStr(name + " tier does not exist!")
@@ -31,6 +32,7 @@ func (t *TierList) InsertTier(name string, priority int) {
 }
 
 // add item to a tier
+// input: a
 func (t *TierList) Add(name string, priority int) {
 	for _, i := range t.Tiers {
 		if i.Priority == priority {
@@ -42,7 +44,8 @@ func (t *TierList) Add(name string, priority int) {
 }
 
 // remove item from a tier
-func (t *TierList) Remove(name string, priority int) {
+// input: ri
+func (t *TierList) RemoveItem(name string, priority int) {
 	for _, i := range t.Tiers {
 		if i.Priority == priority {
 			for j, k := range i.Items {
@@ -56,7 +59,19 @@ func (t *TierList) Remove(name string, priority int) {
 	t.LogStr("no item or priority found")
 }
 
-// display
+// removes a tier by either priority or name, removes first match(!!!)
+// input: rt
+func (t *TierList) RemoveTier(name string, priority int) {
+	for _, i := range t.Tiers {
+		if i.Name == name || i.Priority == priority {
+			delete(t.Tiers, i.Name)
+			return
+		}
+	}
+}
+
+// display the table
+// input: s
 func (t *TierList) Show() {
 	tiers := make([]Tier, 0, len(t.Tiers))
 
@@ -136,6 +151,10 @@ func (t *TierList) Show() {
 		*Settings.MarginItems*2+*Settings.MarginTier*2) + "\n")
 
 	t.output.Write([]byte(out))
+}
+
+// TODO: generates preset
+func (t *TierList) GenPreset(n int) {
 }
 
 // centre text based on the box size
