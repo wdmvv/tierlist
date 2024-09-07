@@ -27,7 +27,7 @@ q
 ```
 this works with every command that needs additional user input
 ### -p
-Tiers presets, does not work right now, will add later; presets (ignore for now):<br>
+Tiers presets, does not work right now, will add later; presets:<br>
 <table>
     <tr>
         <th>Number</th>
